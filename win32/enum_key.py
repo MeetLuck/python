@@ -15,32 +15,45 @@ hkcrnum = _winreg.QueryInfoKey(hkcrkey)[0]
 print '*** found %d Software ***' %hklmnum
 print '*** found %d Products ***' %hkcrnum
 
-program = ['OpenOffice','Python','GnuWin32','firefox','chrome']
+program = ['OpenOffice','Python','GnuWin32','firefox','Chrome','Git', 'Node']
 
-def search(conn, key,num,path):
-    print '*'*20 
-    print 
+def search(conn):
+    if conn == HKLM:
+        value = 'DisplayName'
+        key = hklmkey
+        num = hklmnum
+        path = uninstallpath
+    elif conn == HKCR:
+        value = 'ProductName'
+        key = hkcrkey
+        num = hkcrnum
+        path = productpath
+    else:
+        raise Exception('Unknown Connection')
+
+    print conn, value, key, num, path
     try:
         for x in range(num):
             keyname = _winreg.EnumKey(key,x)
             skey = _winreg.OpenKey(conn, path +'\\'+keyname, 0,_winreg.KEY_ALL_ACCESS)
 #           print keyname, skey
             try:
-                software = _winreg.QueryValueEx(skey,"ProductName")[0]
-                print "%s : %s" %(keyname, software)
+                software = _winreg.QueryValueEx(skey,value)[0]
+#               print "%s : %s" %(keyname, software)
                 for pg in program:
                     if pg in software:
                         print pg, software
-                        print "%s : %s" %(keyname, software)
-                        _winreg.DeleteValue(skey,'ProductName')
+                        print "found %s : %s" %(keyname, software)
+                        _winreg.DeleteValue(skey,value)
             except:
                 pass
+        print x,'\t',num
+
     except:
         pass
 
 #print 'Uninstall...'
-#search(HKLM, hklmkey, hklmnum, uninstallpath)
-print 'Products...'
-search(HKCR, hkcrkey, 10*hkcrnum, productpath)
+search(HKLM)
+search(HKCR)
 
 
